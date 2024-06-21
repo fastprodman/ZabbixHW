@@ -1,7 +1,7 @@
 package repository
 
 type DatabaseRepo interface {
-	CreateRecord()
+	CreateRecord(map[string]interface{}) (map[string]interface{}, error)
 	ReadRecord()
 	UpdateRecord()
 	DeleteRecord()

@@ -2,13 +2,13 @@ package main
 
 import "net/http"
 
-func routes() http.Handler {
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /records", postRecordHandler)
-	mux.HandleFunc("GET /records/{id}", getRecordHandler)
-	mux.HandleFunc("PUT /records/{id}", putRecordHandler)
-	mux.HandleFunc("DELETE /records/{id}", deleteRecordHandler)
+	mux.HandleFunc("POST /records", app.postRecordHandler)
+	mux.HandleFunc("GET /records/{id}", app.getRecordHandler)
+	mux.HandleFunc("PUT /records/{id}", app.putRecordHandler)
+	mux.HandleFunc("DELETE /records/{id}", app.deleteRecordHandler)
 
 	return mux
 }

@@ -3,11 +3,17 @@ package main
 import (
 	"log"
 	"net/http"
+	"zabbixhw/pkg/repository"
 )
 
-func main() {
+type application struct {
+	DB repository.DatabaseRepo
+}
 
-	err := http.ListenAndServe(":8080", routes())
+func main() {
+	var app application
+
+	err := http.ListenAndServe(":8080", app.routes())
 	if err != nil {
 		log.Fatal(err)
 	}
