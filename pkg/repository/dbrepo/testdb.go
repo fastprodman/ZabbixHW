@@ -1,14 +1,49 @@
 package dbrepo
 
+import "errors"
+
 type TestDB struct {
-	data []map[string]interface{}
+	Data []map[string]interface{}
 }
 
 func (db *TestDB) CreateRecord(data map[string]interface{}) (map[string]interface{}, error) {
-	data["id"] = 10
+	var newID uint32 = 1 // Default ID if the database is empty
+
+	// Check if the database is not empty
+	if len(db.Data) > 0 {
+		// Get the ID of the last record
+		lastRecord := db.Data[len(db.Data)-1]
+		if id, ok := lastRecord["id"].(uint32); ok {
+			newID = id + 1
+		} else {
+			return nil, errors.New("invalid ID type in last record")
+		}
+	}
+
+	// Set the new record's ID
+	data["id"] = newID
+
+	// Add the new record to the database
+	db.Data = append(db.Data, data)
+
 	return data, nil
 }
 
-func (db *TestDB) ReadRecord()   {}
+// ReadRecord retrieves a record by its ID
+func (db *TestDB) ReadRecord(id uint32) (map[string]interface{}, error) {
+	// Iterate through the records to find the matching ID
+	for _, record := range db.Data {
+		if recordID, ok := record["id"].(uint32); ok {
+			if recordID == id {
+				return record, nil
+			}
+		} else {
+			return nil, errors.New("invalid ID type in record")
+		}
+	}
+	// If no matching record is found, return an error
+	return nil, errors.New("record not found")
+}
+
 func (db *TestDB) UpdateRecord() {}
 func (db *TestDB) DeleteRecord() {}

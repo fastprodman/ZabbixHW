@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -32,7 +31,7 @@ func Test_postRecordHandler(t *testing.T) {
 			expectedCode: http.StatusOK,
 			expectedBody: `{
 				"name": "John",
-				"id": 10
+				"id": 1
 			}`,
 		},
 		{
@@ -65,9 +64,9 @@ func Test_postRecordHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var req *http.Request
 			if tt.input != "" {
-				req = httptest.NewRequest("POST", "/record", bytes.NewBufferString(tt.input))
+				req = httptest.NewRequest("POST", "/records", bytes.NewBufferString(tt.input))
 			} else {
-				req = httptest.NewRequest("POST", "/record", nil)
+				req = httptest.NewRequest("POST", "/records", nil)
 			}
 
 			// Create a ResponseRecorder to record the response
@@ -81,8 +80,6 @@ func Test_postRecordHandler(t *testing.T) {
 			if rr.Code != tt.expectedCode {
 				t.Errorf("expected status code %d, got %d", tt.expectedCode, rr.Code)
 			}
-
-			fmt.Println(rr.Body)
 
 			// Check the response body
 			if tt.expectedBody != "" {
@@ -111,6 +108,63 @@ func Test_postRecordHandler(t *testing.T) {
 				if rr.Body.String() != tt.expectedErrMsg {
 					t.Errorf("expected error message %q, got %q", tt.expectedErrMsg, rr.Body.String())
 				}
+			}
+		})
+	}
+}
+
+func Test_getRecordHandler(t *testing.T) {
+	app := &application{
+		DB: &dbrepo.TestDB{
+			Data: []map[string]interface{}{
+				{"id": uint32(1), "name": "Record 1"},
+			},
+		},
+	}
+
+	// Test cases
+	tests := []struct {
+		name         string
+		path         string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			name:         "Valid ID",
+			path:         "/records/1",
+			expectedCode: http.StatusOK,
+			expectedBody: `{"id":1,"name":"Record 1"}`,
+		},
+		{
+			name:         "Invalid ID",
+			path:         "/records/abc",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "Invalid ID\n",
+		},
+		{
+			name:         "Record Not Found",
+			path:         "/records/999",
+			expectedCode: http.StatusBadRequest,
+			expectedBody: "record not found\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", tt.path, nil)
+			rr := httptest.NewRecorder()
+			mux := http.NewServeMux()
+			mux.HandleFunc("GET /records/{id}", app.getRecordHandler)
+			mux.ServeHTTP(rr, req)
+
+			// Check the status code
+			if rr.Code != tt.expectedCode {
+				t.Errorf("expected status code %d, got %d", tt.expectedCode, rr.Code)
+			}
+
+			// Check the response body
+			if rr.Body.String() != tt.expectedBody {
+				t.Errorf("expected body %q, got %q", tt.expectedBody, rr.Body.String())
 			}
 		})
 	}

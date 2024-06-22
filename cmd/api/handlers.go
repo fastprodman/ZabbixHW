@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 func (app *application) postRecordHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,14 +23,14 @@ func (app *application) postRecordHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	respData, err := app.DB.CreateRecord(data)
+	record, err := app.DB.CreateRecord(data)
 	if err != nil {
 		http.Error(w, "Error creating record", http.StatusInternalServerError)
 		return
 	}
 
 	// Respond back with the updated data
-	response, err := json.Marshal(respData)
+	response, err := json.Marshal(record)
 	if err != nil {
 		http.Error(w, "Error encoding response JSON", http.StatusInternalServerError)
 		return
@@ -40,7 +41,27 @@ func (app *application) postRecordHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) getRecordHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
 
+	record, err := app.DB.ReadRecord(uint32(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response, err := json.Marshal(record)
+	if err != nil {
+		http.Error(w, "Error encoding response JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
 func (app *application) putRecordHandler(w http.ResponseWriter, r *http.Request) {
