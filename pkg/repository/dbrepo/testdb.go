@@ -45,5 +45,41 @@ func (db *TestDB) ReadRecord(id uint32) (map[string]interface{}, error) {
 	return nil, errors.New("record not found")
 }
 
-func (db *TestDB) UpdateRecord() {}
-func (db *TestDB) DeleteRecord() {}
+func (db *TestDB) UpdateRecord(id uint32, data map[string]interface{}) (map[string]interface{}, error) {
+	// Iterate through the records to find the matching ID
+	for i, record := range db.Data {
+		if recordID, ok := record["id"].(uint32); ok {
+			if recordID == id {
+				// Update the record with new data, preserving the ID
+				for key, value := range data {
+					record[key] = value
+				}
+				record["id"] = id
+				db.Data[i] = record
+				return record, nil
+			}
+		} else {
+			return nil, errors.New("invalid ID type in record")
+		}
+	}
+	// If no matching record is found, return an error
+	return nil, errors.New("record not found")
+}
+
+// DeleteRecord deletes a record by its ID
+func (db *TestDB) DeleteRecord(id uint32) error {
+	// Iterate through the records to find the matching ID
+	for i, record := range db.Data {
+		if recordID, ok := record["id"].(uint32); ok {
+			if recordID == id {
+				// Remove the record from the slice
+				db.Data = append(db.Data[:i], db.Data[i+1:]...)
+				return nil
+			}
+		} else {
+			return errors.New("invalid ID type in record")
+		}
+	}
+	// If no matching record is found, return an error
+	return errors.New("record not found")
+}
