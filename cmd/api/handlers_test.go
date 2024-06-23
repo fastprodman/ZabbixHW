@@ -2,23 +2,22 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"zabbixhw/pkg/repository/dbrepo"
 )
 
 func Test_postRecordHandler(t *testing.T) {
-	app := &application{
-		DB: &dbrepo.TestDB{},
-	}
-
 	// Test cases
 	tests := []struct {
 		name         string
 		input        string
 		expectedCode int
 		expectedBody string
+		errExpected  bool
 	}{
 		{
 			name: "Valid JSON without id",
@@ -29,6 +28,19 @@ func Test_postRecordHandler(t *testing.T) {
 			expectedBody: `{"id":1,"name":"John"}`,
 		},
 		{
+			name: "Valid JSON nested structure",
+			input: `{
+				"name": "John",
+				"address": {
+					"street": "123 Main St",
+					"city": "Anytown"
+				}
+			}`,
+			expectedCode: http.StatusOK,
+			expectedBody: `{"id":1,"name":"John","address":{"street":"123 Main St","city":"Anytown"}}`,
+			errExpected:  false,
+		},
+		{
 			name: "JSON with id",
 			input: `{
 				"id": 1,
@@ -36,12 +48,14 @@ func Test_postRecordHandler(t *testing.T) {
 			}`,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: "Field 'id' is not allowed\n",
+			errExpected:  true,
 		},
 		{
 			name:         "No JSON given",
 			input:        ``,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: "Error decoding JSON\n",
+			errExpected:  true,
 		},
 		{
 			name: "Invalid JSON",
@@ -51,11 +65,18 @@ func Test_postRecordHandler(t *testing.T) {
 			}`,
 			expectedCode: http.StatusBadRequest,
 			expectedBody: "Error decoding JSON\n",
+			errExpected:  true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			app := &application{
+				DB: &dbrepo.TestDB{
+					Data: []map[string]interface{}{},
+				},
+			}
+
 			var req *http.Request
 			if tt.input != "" {
 				req = httptest.NewRequest("POST", "/records", bytes.NewBufferString(tt.input))
@@ -75,9 +96,27 @@ func Test_postRecordHandler(t *testing.T) {
 				t.Errorf("expected status code %d, got %d", tt.expectedCode, rr.Code)
 			}
 
-			// Check the response body
-			if rr.Body.String() != tt.expectedBody {
-				t.Errorf("expected body %q, got %q", tt.expectedBody, rr.Body.String())
+			if !tt.errExpected {
+
+				var expectedBodyMap, actualBodyMap map[string]interface{}
+				err := json.Unmarshal([]byte(tt.expectedBody), &expectedBodyMap)
+				if err != nil {
+					t.Fatalf("error unmarshaling expected body: %v", err)
+				}
+
+				err = json.Unmarshal(rr.Body.Bytes(), &actualBodyMap)
+				if err != nil {
+					t.Fatalf("error unmarshaling actual body: %v", err)
+				}
+
+				if !reflect.DeepEqual(expectedBodyMap, actualBodyMap) {
+					t.Errorf("expected body %v, got %v", expectedBodyMap, actualBodyMap)
+				}
+			} else {
+				// Check the response body
+				if rr.Body.String() != tt.expectedBody {
+					t.Errorf("expected body %q, got %q", tt.expectedBody, rr.Body.String())
+				}
 			}
 
 		})

@@ -1,0 +1,7 @@
+{"id": 1, "name": "Alice", "details": {"age": 30, "city": "New York"}}
+{"id": 2, "name": "Bob", "details": {"age": 25, "city": "San Francisco"}}
+{"id": 3, "name": "Charlie", "details": {"age": 35, "city": "Los Angeles"}}
+{"id": 4, "name": "Diana", "hobbies": ["reading", "traveling"]}
+{"id": 5, "name": "Edward", "employment": {"company": "TechCorp", "position": "Engineer"}}
+{"id": 6, "name": "Fiona", "languages": ["English", "Spanish"]}
+{"id": 7, "name": "George", "projects": [{"name": "Project X", "status": "Completed"}, {"name": "Project Y", "status": "Ongoing"}]}
