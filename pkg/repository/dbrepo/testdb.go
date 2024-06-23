@@ -6,7 +6,8 @@ type TestDB struct {
 	Data []map[string]interface{}
 }
 
-func (db *TestDB) CreateRecord(data map[string]interface{}) (map[string]interface{}, error) {
+// Adds id to record and writes it into db
+func (db *TestDB) CreateRecord(data map[string]interface{}) error {
 	var newID uint32 = 1 // Default ID if the database is empty
 
 	// Check if the database is not empty
@@ -16,7 +17,7 @@ func (db *TestDB) CreateRecord(data map[string]interface{}) (map[string]interfac
 		if id, ok := lastRecord["id"].(uint32); ok {
 			newID = id + 1
 		} else {
-			return nil, errors.New("invalid ID type in last record")
+			return errors.New("invalid ID type in last record")
 		}
 	}
 
@@ -26,7 +27,7 @@ func (db *TestDB) CreateRecord(data map[string]interface{}) (map[string]interfac
 	// Add the new record to the database
 	db.Data = append(db.Data, data)
 
-	return data, nil
+	return nil
 }
 
 // ReadRecord retrieves a record by its ID
@@ -45,8 +46,9 @@ func (db *TestDB) ReadRecord(id uint32) (map[string]interface{}, error) {
 	return nil, errors.New("record not found")
 }
 
-func (db *TestDB) UpdateRecord(id uint32, data map[string]interface{}) (map[string]interface{}, error) {
+func (db *TestDB) UpdateRecord(id uint32, data map[string]interface{}) error {
 	// Iterate through the records to find the matching ID
+	data["id"] = id
 	for i, record := range db.Data {
 		if recordID, ok := record["id"].(uint32); ok {
 			if recordID == id {
@@ -54,16 +56,15 @@ func (db *TestDB) UpdateRecord(id uint32, data map[string]interface{}) (map[stri
 				for key, value := range data {
 					record[key] = value
 				}
-				record["id"] = id
 				db.Data[i] = record
-				return record, nil
+				return nil
 			}
 		} else {
-			return nil, errors.New("invalid ID type in record")
+			return errors.New("invalid ID type in record")
 		}
 	}
 	// If no matching record is found, return an error
-	return nil, errors.New("record not found")
+	return errors.New("record not found")
 }
 
 // DeleteRecord deletes a record by its ID

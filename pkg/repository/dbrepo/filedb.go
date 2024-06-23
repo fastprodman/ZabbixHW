@@ -25,7 +25,7 @@ func NewFileDB(file *os.File) (*FileDB, error) {
 	return db, nil
 }
 
-func (db *FileDB) CreateRecord(data map[string]interface{}) (map[string]interface{}, error) {
+func (db *FileDB) CreateRecord(data map[string]interface{}) error {
 	db.fileMutex.Lock()
 	defer db.fileMutex.Unlock()
 
@@ -36,7 +36,7 @@ func (db *FileDB) CreateRecord(data map[string]interface{}) (map[string]interfac
 	for scanner.Scan() {
 		var record map[string]interface{}
 		if err := json.Unmarshal(scanner.Bytes(), &record); err != nil {
-			return nil, err
+			return err
 		}
 		if recordID, ok := record["id"].(float64); ok {
 			id = uint32(recordID)
@@ -44,7 +44,7 @@ func (db *FileDB) CreateRecord(data map[string]interface{}) (map[string]interfac
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return err
 	}
 
 	// Increment ID for new record
@@ -53,7 +53,7 @@ func (db *FileDB) CreateRecord(data map[string]interface{}) (map[string]interfac
 	// Marshal the new record to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Append newline character to JSON data
@@ -61,10 +61,10 @@ func (db *FileDB) CreateRecord(data map[string]interface{}) (map[string]interfac
 
 	// Write the new record string to the file
 	if _, err := db.file.WriteString(recordString); err != nil {
-		return nil, err
+		return err
 	}
 
-	return data, nil
+	return nil
 }
 
 func (db *FileDB) ReadRecord(id uint32) (map[string]interface{}, error) {

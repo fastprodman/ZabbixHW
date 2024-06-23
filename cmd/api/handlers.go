@@ -9,21 +9,21 @@ import (
 func (app *application) postRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the JSON body into a map
-	var data map[string]interface{}
+	var record map[string]interface{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&data)
+	err := decoder.Decode(&record)
 	if err != nil {
 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 		return
 	}
 
 	// Check if the JSON contains the field "id"
-	if _, exists := data["id"]; exists {
+	if _, exists := record["id"]; exists {
 		http.Error(w, "Field 'id' is not allowed", http.StatusBadRequest)
 		return
 	}
 
-	record, err := app.DB.CreateRecord(data)
+	err = app.DB.CreateRecord(record)
 	if err != nil {
 		http.Error(w, "Error creating record", http.StatusInternalServerError)
 		return
@@ -74,21 +74,21 @@ func (app *application) putRecordHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Decode the JSON body into a map
-	var data map[string]interface{}
+	var record map[string]interface{}
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&data)
+	err = decoder.Decode(&record)
 	if err != nil {
 		http.Error(w, "Error decoding JSON", http.StatusBadRequest)
 		return
 	}
 
 	// Check if the JSON contains the field "id"
-	if _, exists := data["id"]; exists {
+	if _, exists := record["id"]; exists {
 		http.Error(w, "Field 'id' is not allowed", http.StatusBadRequest)
 		return
 	}
 
-	record, err := app.DB.UpdateRecord(uint32(id), data)
+	err = app.DB.UpdateRecord(uint32(id), record)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
