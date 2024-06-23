@@ -124,14 +124,6 @@ func Test_postRecordHandler(t *testing.T) {
 }
 
 func Test_getRecordHandler(t *testing.T) {
-	app := &application{
-		DB: &dbrepo.TestDB{
-			Data: []map[string]interface{}{
-				{"id": uint32(1), "name": "Record 1"},
-			},
-		},
-	}
-
 	// Test cases
 	tests := []struct {
 		name         string
@@ -161,6 +153,13 @@ func Test_getRecordHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			app := &application{
+				DB: &dbrepo.TestDB{
+					Data: []map[string]interface{}{
+						{"id": uint32(1), "name": "Record 1"},
+					},
+				},
+			}
 			req := httptest.NewRequest("GET", tt.path, nil)
 			rr := httptest.NewRecorder()
 			mux := http.NewServeMux()
@@ -181,14 +180,6 @@ func Test_getRecordHandler(t *testing.T) {
 }
 
 func Test_deleteRecordHandler(t *testing.T) {
-	app := &application{
-		DB: &dbrepo.TestDB{
-			Data: []map[string]interface{}{
-				{"id": uint32(1), "name": "Record 1"},
-			},
-		},
-	}
-
 	// Test cases
 	tests := []struct {
 		name         string
@@ -218,6 +209,13 @@ func Test_deleteRecordHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			app := &application{
+				DB: &dbrepo.TestDB{
+					Data: []map[string]interface{}{
+						{"id": uint32(1), "name": "Record 1"},
+					},
+				},
+			}
 			req := httptest.NewRequest("DELETE", tt.path, nil)
 			rr := httptest.NewRecorder()
 			mux := http.NewServeMux()
@@ -238,14 +236,6 @@ func Test_deleteRecordHandler(t *testing.T) {
 }
 
 func Test_updateRecordHandler(t *testing.T) {
-	app := &application{
-		DB: &dbrepo.TestDB{
-			Data: []map[string]interface{}{
-				{"id": uint32(1), "name": "Record 1"},
-			},
-		},
-	}
-
 	tests := []struct {
 		name         string
 		path         string
@@ -298,6 +288,13 @@ func Test_updateRecordHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			app := &application{
+				DB: &dbrepo.TestDB{
+					Data: []map[string]interface{}{
+						{"id": uint32(1), "name": "Record 1"},
+					},
+				},
+			}
 			var req *http.Request
 			if tt.inputJSON != "" {
 				req = httptest.NewRequest("PUT", tt.path, bytes.NewBufferString(tt.inputJSON))
