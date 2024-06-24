@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+	"zabbixhw/pkg/helpers"
 	"zabbixhw/pkg/repository/dbrepo"
 )
 
@@ -97,21 +97,22 @@ func Test_postRecordHandler(t *testing.T) {
 			}
 
 			if !tt.errExpected {
+				var actualBodyMap map[string]interface{}
 
-				var expectedBodyMap, actualBodyMap map[string]interface{}
-				err := json.Unmarshal([]byte(tt.expectedBody), &expectedBodyMap)
-				if err != nil {
-					t.Fatalf("error unmarshaling expected body: %v", err)
-				}
-
-				err = json.Unmarshal(rr.Body.Bytes(), &actualBodyMap)
+				err := json.Unmarshal(rr.Body.Bytes(), &actualBodyMap)
 				if err != nil {
 					t.Fatalf("error unmarshaling actual body: %v", err)
 				}
 
-				if !reflect.DeepEqual(expectedBodyMap, actualBodyMap) {
-					t.Errorf("expected body %v, got %v", expectedBodyMap, actualBodyMap)
+				ok, err := helpers.CompareJSONWithMap(tt.expectedBody, actualBodyMap)
+				if err != nil {
+					t.Fatalf("error unmarshaling actual body: %v", err)
 				}
+
+				if !ok {
+					t.Errorf("expected body %v, got %v", tt.expectedBody, actualBodyMap)
+				}
+
 			} else {
 				// Check the response body
 				if rr.Body.String() != tt.expectedBody {

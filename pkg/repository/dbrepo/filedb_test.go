@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"reflect"
 	"testing"
+	"zabbixhw/pkg/helpers"
 )
 
 func Test_NewFileDB(t *testing.T) {
@@ -78,14 +78,13 @@ func Test_ReadRecord(t *testing.T) {
 			}
 
 			if tt.expectedRecord != "" {
-				var expectedBodyMap map[string]interface{}
-				err = json.Unmarshal([]byte(tt.expectedRecord), &expectedBodyMap)
+				equal, err := helpers.CompareJSONWithMap(tt.expectedRecord, actualRecord)
 				if err != nil {
-					t.Fatalf("error unmarshaling expected body: %v", err)
+					t.Fatalf("got error comparing records: %s", err.Error())
 				}
 
-				if !reflect.DeepEqual(expectedBodyMap, actualRecord) {
-					t.Errorf("expected body %v, got %v", expectedBodyMap, actualRecord)
+				if !equal {
+					t.Errorf("records not equal as expected %v and %s", actualRecord, tt.expectedRecord)
 				}
 			} else {
 				if actualRecord != nil {
@@ -111,42 +110,56 @@ func Test_CreateRecord(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to initialize FileDB: %v", err)
 		}
+		testRecord := `{"name":"Bob","details":{"age":25,"city":"Los Angeles"}}`
+		expectedDBRecord := `{"id":1,"name":"Bob","details":{"age":25,"city":"Los Angeles"}}`
 
-		// Create a new record
-		newRecord := map[string]interface{}{
-			"name":    "Bob",
-			"details": map[string]interface{}{"age": 25, "city": "Los Angeles"},
-		}
-
-		err = db.CreateRecord(newRecord)
-		if err != nil {
-			t.Fatalf("Failed to create record: %v", err)
-		}
-
-		// Rewind the file to the beginning
-		file.Seek(0, 0)
-
-		// Read the record back from the file
-		expectedRecordString := `{"id":1,"name":"Bob","details":{"age":25,"city":"Los Angeles"}}`
-		scanner := bufio.NewScanner(file)
-		var createdRecordString string
-		for scanner.Scan() {
-			createdRecordString = scanner.Text()
-		}
-
-		var expectedBodyMap, actualBodyMap map[string]interface{}
-		err = json.Unmarshal([]byte(expectedRecordString), &expectedBodyMap)
+		var testRecordMap map[string]interface{}
+		err = json.Unmarshal([]byte(testRecord), &testRecordMap)
 		if err != nil {
 			t.Fatalf("error unmarshaling expected body: %v", err)
 		}
 
-		err = json.Unmarshal([]byte(createdRecordString), &actualBodyMap)
+		err = db.CreateRecord(testRecordMap)
 		if err != nil {
-			t.Fatalf("error unmarshaling actual body: %v", err)
+			t.Fatalf("Failed to create record: %v", err)
+		}
+		// Check if record modified as expected
+		equals, err := helpers.CompareJSONWithMap(expectedDBRecord, testRecordMap)
+		if err != nil {
+			t.Fatalf("Failed to create record: %v", err)
 		}
 
-		if !reflect.DeepEqual(expectedBodyMap, actualBodyMap) {
-			t.Errorf("expected body %v, got %v", expectedBodyMap, actualBodyMap)
+		if !equals {
+			t.Errorf("Record not assigned with expected id")
+		}
+
+		// Check if record is in fle
+		found, err := jsonRecordInFile(expectedDBRecord, file)
+		if err != nil {
+			t.Fatalf("Failed to create record: %v", err)
+		}
+
+		if !found {
+			t.Errorf("Expected record not in db")
 		}
 	})
+}
+
+func jsonRecordInFile(record string, file *os.File) (bool, error) {
+	file.Seek(0, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		recordInFile := scanner.Text()
+
+		found, err := helpers.CompareJSONStrings(recordInFile, record)
+		if err != nil {
+			return false, err
+		}
+
+		if found {
+			return true, nil
+		}
+
+	}
+	return false, nil
 }

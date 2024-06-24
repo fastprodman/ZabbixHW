@@ -198,3 +198,70 @@ func TestCompareMapsAsJSON(t *testing.T) {
 		})
 	}
 }
+
+// TestCompareJSONStrings tests the CompareJSONStrings function
+func Test_CompareJSONStrings(t *testing.T) {
+	tests := []struct {
+		name     string
+		jsonStr1 string
+		jsonStr2 string
+		expected bool
+		wantErr  bool
+	}{
+		{
+			name:     "Equal JSON strings",
+			jsonStr1: `{"name": "Alice", "age": 30}`,
+			jsonStr2: `{"age": 30, "name": "Alice"}`,
+			expected: true,
+			wantErr:  false,
+		},
+		{
+			name:     "Different JSON strings",
+			jsonStr1: `{"name": "Alice", "age": 30}`,
+			jsonStr2: `{"name": "Bob", "age": 30}`,
+			expected: false,
+			wantErr:  false,
+		},
+		{
+			name:     "Invalid JSON string 1",
+			jsonStr1: `{"name": "Alice", "age": 30`,
+			jsonStr2: `{"name": "Alice", "age": 30}`,
+			expected: false,
+			wantErr:  true,
+		},
+		{
+			name:     "Invalid JSON string 2",
+			jsonStr1: `{"name": "Alice", "age": 30}`,
+			jsonStr2: `{"name": "Alice", "age": 30`,
+			expected: false,
+			wantErr:  true,
+		},
+		{
+			name:     "Empty JSON strings",
+			jsonStr1: `{}`,
+			jsonStr2: `{}`,
+			expected: true,
+			wantErr:  false,
+		},
+		{
+			name:     "One empty JSON string",
+			jsonStr1: `{"name": "Alice", "age": 30}`,
+			jsonStr2: `{}`,
+			expected: false,
+			wantErr:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := CompareJSONStrings(tt.jsonStr1, tt.jsonStr2)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CompareJSONStrings() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.expected {
+				t.Errorf("CompareJSONStrings() = %v, expected %v", got, tt.expected)
+			}
+		})
+	}
+}

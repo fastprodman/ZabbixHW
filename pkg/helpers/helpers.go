@@ -49,3 +49,23 @@ func CompareMapsAsJSON(map1, map2 map[string]interface{}) (bool, error) {
 	areEqual := reflect.DeepEqual(json1, json2)
 	return areEqual, nil
 }
+
+func CompareJSONStrings(jsonStr1, jsonStr2 string) (bool, error) {
+	// Unmarshal the first JSON string into a map
+	var map1 map[string]interface{}
+	err1 := json.Unmarshal([]byte(jsonStr1), &map1)
+	if err1 != nil {
+		return false, fmt.Errorf("error unmarshalling jsonStr1: %v", err1)
+	}
+
+	// Unmarshal the second JSON string into a map
+	var map2 map[string]interface{}
+	err2 := json.Unmarshal([]byte(jsonStr2), &map2)
+	if err2 != nil {
+		return false, fmt.Errorf("error unmarshalling jsonStr2: %v", err2)
+	}
+
+	// Compare the two maps
+	areEqual := reflect.DeepEqual(map1, map2)
+	return areEqual, nil
+}

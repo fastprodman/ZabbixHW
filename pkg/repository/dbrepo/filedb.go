@@ -95,5 +95,9 @@ func (db *FileDB) ReadRecord(id uint32) (map[string]interface{}, error) {
 	return nil, ErrRecordNotFound
 }
 
-func (db *FileDB) UpdateRecord() {}
+// func (db *FileDB) UpdateRecord(id uint32, data map[string]interface{}) error {
+// 	data["id"] = id
+
+// }
+
 func (db *FileDB) DeleteRecord() {}
