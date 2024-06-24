@@ -1,9 +1,13 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"zabbixhw/pkg/repository"
+	"zabbixhw/pkg/repository/filedb"
 )
 
 type application struct {
@@ -11,15 +15,30 @@ type application struct {
 }
 
 func main() {
-	var app application
+	// Define the flags with default values
+	filepath := flag.String("filepath", "./testdata/db.json", "Path to the file")
+	port := flag.Int("port", 8080, "Port number")
 
-	// file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer file.Close()
+	// Parse the flags
+	flag.Parse()
 
-	err := http.ListenAndServe(":8080", app.routes())
+	file, err := os.OpenFile(*filepath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	db, err := filedb.NewFileDB(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app := &application{
+		DB: db,
+	}
+
+	addr := fmt.Sprintf(":%d", *port)
+	err = http.ListenAndServe(addr, app.routes())
 	if err != nil {
 		log.Fatal(err)
 	}
