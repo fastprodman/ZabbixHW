@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"zabbixhw/pkg/repository/dbrepo"
+	"zabbixhw/pkg/repository/testdb"
 )
 
 func TestRoutesExistence(t *testing.T) {
 	app := &application{
-		DB: &dbrepo.TestDB{},
+		DB: &testdb.TestDB{},
 	}
 	handler := app.routes()
 

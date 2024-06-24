@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"zabbixhw/pkg/helpers"
-	"zabbixhw/pkg/repository/dbrepo"
+	"zabbixhw/pkg/repository/testdb"
 )
 
 func Test_postRecordHandler(t *testing.T) {
@@ -72,7 +72,7 @@ func Test_postRecordHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := &application{
-				DB: &dbrepo.TestDB{
+				DB: &testdb.TestDB{
 					Data: []map[string]interface{}{},
 				},
 			}
@@ -155,7 +155,7 @@ func Test_getRecordHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := &application{
-				DB: &dbrepo.TestDB{
+				DB: &testdb.TestDB{
 					Data: []map[string]interface{}{
 						{"id": uint32(1), "name": "Record 1"},
 					},
@@ -211,7 +211,7 @@ func Test_deleteRecordHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := &application{
-				DB: &dbrepo.TestDB{
+				DB: &testdb.TestDB{
 					Data: []map[string]interface{}{
 						{"id": uint32(1), "name": "Record 1"},
 					},
@@ -290,7 +290,7 @@ func Test_updateRecordHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := &application{
-				DB: &dbrepo.TestDB{
+				DB: &testdb.TestDB{
 					Data: []map[string]interface{}{
 						{"id": uint32(1), "name": "Record 1"},
 					},

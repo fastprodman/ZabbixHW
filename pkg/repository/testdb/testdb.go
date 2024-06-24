@@ -1,4 +1,4 @@
-package dbrepo
+package testdb
 
 import "errors"
 
