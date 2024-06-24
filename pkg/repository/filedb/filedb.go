@@ -19,12 +19,12 @@ var (
 type FileDB struct {
 	data      []map[string]interface{} // In-memory data storage
 	file      *os.File                 // File handler for the database file
-	fileMutex *sync.Mutex              // Mutex for handling concurrent access to the file
+	fileMutex *sync.RWMutex            // Mutex for handling concurrent access to the file
 }
 
 // NewFileDB initializes a new FileDB instance and loads data from the provided file
 func NewFileDB(file *os.File) (*FileDB, error) {
-	fileMutex := &sync.Mutex{}
+	fileMutex := &sync.RWMutex{}
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
 
@@ -49,12 +49,12 @@ func (db *FileDB) CreateRecord(data map[string]interface{}) error {
 	defer db.fileMutex.Unlock()
 
 	// Determine the ID for the new record
-	var newID uint32 = 1 // Default ID if the database is empty
+	var newID float64 = 1 // Default ID if the database is empty
 
 	if len(db.data) > 0 {
 		lastRecord := db.data[len(db.data)-1]
 		if id, ok := lastRecord["id"].(float64); ok {
-			newID = uint32(id) + 1
+			newID = float64(id + 1)
 		} else {
 			return ErrInvalidIDType
 		}
@@ -74,13 +74,13 @@ func (db *FileDB) CreateRecord(data map[string]interface{}) error {
 
 // ReadRecord retrieves a record by its ID
 func (db *FileDB) ReadRecord(id uint32) (map[string]interface{}, error) {
-	db.fileMutex.Lock()
-	defer db.fileMutex.Unlock()
+	db.fileMutex.RLock()
+	defer db.fileMutex.RUnlock()
 
 	// Search for the record with the specified ID
 	for _, record := range db.data {
 		if recordID, ok := record["id"].(float64); ok {
-			if uint32(recordID) == id {
+			if recordID == float64(id) {
 				return record, nil
 			}
 		} else {
@@ -100,11 +100,11 @@ func (db *FileDB) UpdateRecord(id uint32, data map[string]interface{}) error {
 	// Search for the record with the specified ID and update it
 	for i, record := range db.data {
 		if recordID, ok := record["id"].(float64); ok {
-			if uint32(recordID) == id {
+			if recordID == float64(id) {
 				for key, value := range data {
 					record[key] = value
 				}
-				record["id"] = id
+				record["id"] = float64(id)
 				db.data[i] = record
 
 				// Write updated data back to the file
@@ -130,7 +130,7 @@ func (db *FileDB) DeleteRecord(id uint32) error {
 	// Search for the record with the specified ID and delete it
 	for i, record := range db.data {
 		if recordID, ok := record["id"].(float64); ok {
-			if uint32(recordID) == id {
+			if recordID == float64(id) {
 				db.data = append(db.data[:i], db.data[i+1:]...)
 
 				// Write updated data back to the file

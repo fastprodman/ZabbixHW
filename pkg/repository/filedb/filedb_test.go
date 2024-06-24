@@ -423,16 +423,16 @@ func Test_ConcurrentOperations(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Number of concurrent operations
-	numOps := 1
+	numOps := 100
 
 	// Run concurrent CreateRecord, ReadRecord, UpdateRecord, and DeleteRecord operations
 	for i := 0; i < numOps; i++ {
-		wg.Add(3)
+		wg.Add(5)
 
-		go func(ui int) {
+		go func(i int) {
 			defer wg.Done()
 			newRecord := map[string]interface{}{
-				"name": fmt.Sprintf("User %d", ui),
+				"name": fmt.Sprintf("User %d", i),
 			}
 			if err := db.CreateRecord(newRecord); err != nil {
 				t.Errorf("Failed to create record: %v", err)
@@ -446,22 +446,29 @@ func Test_ConcurrentOperations(t *testing.T) {
 			}
 		}(i)
 
-		go func(ui int) {
+		go func(i int) {
+			defer wg.Done()
+			if _, err := db.ReadRecord(uint32(i + 1)); err != nil && err != ErrRecordNotFound {
+				t.Errorf("Failed to read record: %v", err)
+			}
+		}(i)
+
+		go func(i int) {
 			defer wg.Done()
 			updatedRecord := map[string]interface{}{
-				"name": fmt.Sprintf("Updated User %d", ui),
+				"name": fmt.Sprintf("Updated User %d", i),
 			}
-			if err := db.UpdateRecord(uint32(ui+1), updatedRecord); err != nil && err != ErrRecordNotFound {
+			if err := db.UpdateRecord(uint32(i+1), updatedRecord); err != nil && err != ErrRecordNotFound {
 				t.Errorf("Failed to update record: %v", err)
 			}
 		}(i)
 
-		// go func(i int) {
-		// 	defer wg.Done()
-		// 	if err := db.DeleteRecord(uint32(i + 1)); err != nil && err != ErrRecordNotFound {
-		// 		t.Errorf("Failed to delete record: %v", err)
-		// 	}
-		// }(i)
+		go func(i int) {
+			defer wg.Done()
+			if err := db.DeleteRecord(uint32(i + 1)); err != nil && err != ErrRecordNotFound {
+				t.Errorf("Failed to delete record: %v", err)
+			}
+		}(i)
 	}
 
 	// Wait for all goroutines to finish
