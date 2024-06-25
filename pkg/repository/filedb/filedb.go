@@ -97,15 +97,15 @@ func (db *FileDB) UpdateRecord(id uint32, data map[string]interface{}) error {
 	db.fileMutex.Lock()
 	defer db.fileMutex.Unlock()
 
+	// Ensure the data has the ID field
+	data["id"] = float64(id)
+
 	// Search for the record with the specified ID and update it
 	for i, record := range db.data {
 		if recordID, ok := record["id"].(float64); ok {
 			if recordID == float64(id) {
-				for key, value := range data {
-					record[key] = value
-				}
-				record["id"] = float64(id)
-				db.data[i] = record
+				// Replace the old record with the new data
+				db.data[i] = data
 
 				// Write updated data back to the file
 				if err := rewriteJSONFile(db.file, db.data); err != nil {
