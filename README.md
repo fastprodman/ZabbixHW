@@ -3,7 +3,7 @@
 
 This project is a test task that implements CRUD functionality for storing JSON objects with random content. It provides the following HTTP endpoints:
 
-- **POST /records**: Creates a record with a required ID and returns the JSON object with the assigned ID in it.
+- **POST /records**: Creates a record with a required JSON body and returns the JSON object with the assigned ID in it.
 - **GET /records/{id}**: Returns the record with the specified ID if it exists.
 - **PUT /records/{id}**: Rewrites the object with the given ID for the now given object and returns the updated object.
 - **DELETE /records/{id}**: Removes the record with the specified ID if it exists.
