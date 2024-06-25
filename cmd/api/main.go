@@ -16,7 +16,7 @@ type application struct {
 
 func main() {
 	// Define the flags with default values
-	filepath := flag.String("filepath", "./testdata/db.json", "Path to the file")
+	filepath := flag.String("filepath", "./dbfile/db.json", "Path to the file")
 	port := flag.Int("port", 8080, "Port number")
 
 	// Parse the flags
