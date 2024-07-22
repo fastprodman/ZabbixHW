@@ -70,7 +70,6 @@ func (db *FileDB) syncLoop() {
 		select {
 		case <-db.updateChan:
 			db.syncDBWithCache()
-			db.cachedUpdates = 0
 		case <-time.After(SyncInterval):
 			db.syncDBWithCache()
 		case <-db.doneChan:
@@ -82,7 +81,10 @@ func (db *FileDB) syncLoop() {
 }
 
 func (db *FileDB) Close() {
+	close(db.updateChan)
+	// Send close command
 	db.doneChan <- true
+	// Wait until changes are in sync and than close the file
 	<-db.doneChan
 	db.file.Close()
 }
@@ -98,6 +100,8 @@ func (db *FileDB) syncDBWithCache() error {
 	if err := rewriteJSONFile(db.file, db.data); err != nil {
 		return fmt.Errorf("error writing to file: %w", err)
 	}
+
+	db.cachedUpdates = 0
 	return nil
 }
 
